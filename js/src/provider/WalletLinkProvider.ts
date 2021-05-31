@@ -2,34 +2,34 @@
 // Copyright (c) 2018-2020 Coinbase, Inc. <https://www.coinbase.com/>
 // Licensed under the Apache License, version 2.0
 
+import SafeEventEmitter from "@metamask/safe-event-emitter"
 import BN from "bn.js"
+import { ethErrors, serializeError } from "eth-rpc-errors"
+import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
 import { EthereumTransactionParams } from "../relay/EthereumTransactionParams"
+import { WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
 import { RequestEthereumAccountsResponse } from "../relay/Web3Response"
 import { AddressString, Callback, IntNumber } from "../types"
 import {
   ensureAddressString,
   ensureBN,
   ensureBuffer,
-  ensureParsedJSONObject,
   ensureHexString,
   ensureIntNumber,
+  ensureParsedJSONObject,
   ensureRegExpString,
   prepend0x
 } from "../util"
 import eip712 from "../vendor-js/eth-eip712-util"
 import { FilterPolyfill } from "./FilterPolyfill"
 import { JSONRPCMethod, JSONRPCRequest, JSONRPCResponse } from "./JSONRPC"
-import { Web3Provider, RequestArguments } from "./Web3Provider"
-import { ethErrors, serializeError } from "eth-rpc-errors"
-import SafeEventEmitter from "@metamask/safe-event-emitter"
 import {
   SubscriptionManager,
   SubscriptionNotification,
   SubscriptionResult
 } from "./SubscriptionManager"
-import { ScopedLocalStorage } from "../lib/ScopedLocalStorage"
-import { WalletLinkRelayEventManager } from "../relay/WalletLinkRelayEventManager"
-import { WalletLinkRelayAbstract } from "../relay/WalletLinkRelayAbstract"
+import { RequestArguments, Web3Provider } from "./Web3Provider"
 
 const LOCAL_STORAGE_ADDRESSES_KEY = "Addresses"
 
@@ -44,7 +44,8 @@ export interface WalletLinkProviderOptions {
 
 export class WalletLinkProvider
   extends SafeEventEmitter
-  implements Web3Provider {
+  implements Web3Provider
+{
   private readonly _filterPolyfill = new FilterPolyfill(this)
   private readonly _subscriptionManager = new SubscriptionManager(this)
 
@@ -96,6 +97,18 @@ export class WalletLinkProvider
         })
       }
     )
+
+    this.setAppInfo = this.setAppInfo.bind(this)
+    this.enable = this.enable.bind(this)
+    this.close = this.close.bind(this)
+    this.send = this.send.bind(this)
+    this.sendAsync = this.sendAsync.bind(this)
+    this.request = this.request.bind(this)
+    this.scanQRCode = this.scanQRCode.bind(this)
+    this.arbitraryRequest = this.arbitraryRequest.bind(this)
+    this.childRequestEthereumAccounts =
+      this.childRequestEthereumAccounts.bind(this)
+    this.initializeRelay = this.initializeRelay.bind(this)
 
     if (this._addresses.length > 0) {
       this.initializeRelay()
